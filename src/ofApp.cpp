@@ -33,12 +33,8 @@ void ofApp::setup()
 
 	d_shader.load("lab1.vert", "lab1.frag");
 	d_shader.begin();
-	d_shader.setUniform2f("iResolution", glm::vec2(1280, 720));
-	d_shader.setUniform3f("eyePosition", d_cam->position());
-	d_shader.setUniform3f("lookAt", d_cam->position() + d_cam->front());
-	d_shader.bindAttribute(ofShader::POSITION_ATTRIBUTE, "in_Position");
+	configureShader();
 	d_shader.end();
-
 }
 
 //--------------------------------------------------------------
@@ -53,9 +49,7 @@ void ofApp::draw()
 
 	d_image.bind(0);
 	d_shader.begin();
-	d_shader.setUniformTexture("uTexture", d_image.getTexture(), 0);
-	d_shader.setUniform3f("eyePosition", d_cam->position());
-	d_shader.setUniform3f("lookAt", d_cam->position() + d_cam->front());
+	updateShader();
 	d_mesh.draw();
 	d_shader.end();
 	d_image.unbind();
@@ -63,6 +57,13 @@ void ofApp::draw()
 	gui.begin();
 	ImGui::Text("average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 	ImGui::ColorEdit3("BG Color", (float*)&d_bgColor);
+	if (ImGui::Button("Reload Shader"))
+	{
+		d_shader.load("lab1.vert", "lab1.frag");
+		d_shader.begin();
+		configureShader();
+		d_shader.end();
+	}
 	gui.end();
 }
 
@@ -151,6 +152,20 @@ void ofApp::handleMouse(float xpos, float ypos)
 
 	d_cam->pitch(yoffset * 0.8f);
 	d_cam->yaw(xoffset * 0.8f);
+}
+
+void ofApp::configureShader()
+{
+	d_shader.setUniform2f("iResolution", glm::vec2(1280, 720));
+	d_shader.setUniform3f("eyePosition", d_cam->position());
+	d_shader.setUniform3f("lookAt", d_cam->position() + d_cam->front());
+	d_shader.bindAttribute(ofShader::POSITION_ATTRIBUTE, "in_Position");
+}
+
+void ofApp::updateShader()
+{
+	d_shader.setUniform3f("eyePosition", d_cam->position());
+	d_shader.setUniform3f("lookAt", d_cam->position() + d_cam->front());
 }
 
 //--------------------------------------------------------------
