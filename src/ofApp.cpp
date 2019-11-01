@@ -1,5 +1,8 @@
 #include "ofApp.h"
 
+#define VS "lab1.vert"
+#define FS "lab1.frag"
+
 //--------------------------------------------------------------
 void ofApp::setup()
 {
@@ -10,7 +13,7 @@ void ofApp::setup()
 	// setup ui
 	gui.setup();
 	ImGui::GetIO().MouseDrawCursor = false;
-	d_bgColor = ofColor(114, 144, 154);
+	d_bgColor = ofColor(0, 0, 0);
 
 	std::vector<ofDefaultVertexType> verts = {
 		{-1,  1, 0}, {1, 1,  0}, {1, -1, 0}, {-1, -1, 0}
@@ -31,7 +34,7 @@ void ofApp::setup()
 	d_image.setUseTexture(true);
 	d_image.loadImage("sample.png");
 
-	d_shader.load("lab1.vert", "lab1.frag");
+	d_shader.load(VS, FS);
 	d_shader.begin();
 	configureShader();
 	d_shader.end();
@@ -59,7 +62,7 @@ void ofApp::draw()
 	ImGui::ColorEdit3("BG Color", (float*)&d_bgColor);
 	if (ImGui::Button("Reload Shader"))
 	{
-		d_shader.load("lab1.vert", "lab1.frag");
+		d_shader.load(VS, FS);
 		d_shader.begin();
 		configureShader();
 		d_shader.end();
@@ -152,11 +155,19 @@ void ofApp::handleMouse(float xpos, float ypos)
 
 	d_cam->pitch(yoffset * 0.8f);
 	d_cam->yaw(xoffset * 0.8f);
+
+	if (d_shader.isLoaded())
+	{
+		d_shader.begin();
+		d_shader.setUniform4f("iMouse", lastX, lastY, xpos, ypos);
+		d_shader.end();
+	}
 }
 
 void ofApp::configureShader()
 {
 	d_shader.setUniform2f("iResolution", glm::vec2(1280, 720));
+	//d_shader.setUniform1f("iTime", 0);
 	d_shader.setUniform3f("eyePosition", d_cam->position());
 	d_shader.setUniform3f("lookAt", d_cam->position() + d_cam->front());
 	d_shader.bindAttribute(ofShader::POSITION_ATTRIBUTE, "in_Position");
@@ -166,6 +177,8 @@ void ofApp::updateShader()
 {
 	d_shader.setUniform3f("eyePosition", d_cam->position());
 	d_shader.setUniform3f("lookAt", d_cam->position() + d_cam->front());
+	d_shader.setUniform3f("bgColor", d_bgColor.x, d_bgColor.y, d_bgColor.z);
+	//d_shader.setUniform1f("iTime", ofGetElapsedTimeMillis() / 1000.0f);
 }
 
 //--------------------------------------------------------------

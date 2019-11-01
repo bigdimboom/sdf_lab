@@ -3,12 +3,8 @@
 uniform vec2 iResolution;
 uniform vec3 eyePosition;
 uniform vec3 lookAt;
+uniform vec3 bgColor;
 out vec4 Out_Frag;
-
-// void main()
-// {
-//     Out_Frag = texture(uTexture, vec2(vUV.x, 1.0 - vUV.y)) + vColor;
-// }
 
 /*
 
@@ -734,7 +730,7 @@ vec3 getNormalOfSurface( in vec3 positionOfHit ){
 // doing our background color is easy enough,
 // just make it pure black. like my soul.
 vec3 doBackgroundColor(){
-	return vec3( 0. );
+	return bgColor;
 }
 
 
