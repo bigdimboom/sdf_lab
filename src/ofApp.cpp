@@ -1,7 +1,7 @@
 #include "ofApp.h"
 
 #define VS "lab1.vert"
-#define FS "lab1.frag"
+#define FS "lab2.frag"
 
 //--------------------------------------------------------------
 void ofApp::setup()
@@ -60,6 +60,7 @@ void ofApp::draw()
 	gui.begin();
 	ImGui::Text("average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 	ImGui::ColorEdit3("BG Color", (float*)&d_bgColor);
+	ImGui::Text("sec: %f", ofGetElapsedTimeMillis() / 1000.0f);
 	if (ImGui::Button("Reload Shader"))
 	{
 		d_shader.load(VS, FS);
@@ -167,18 +168,21 @@ void ofApp::handleMouse(float xpos, float ypos)
 void ofApp::configureShader()
 {
 	d_shader.setUniform2f("iResolution", glm::vec2(1280, 720));
-	//d_shader.setUniform1f("iTime", 0);
+	d_shader.setUniform1f("iTimer", ofGetElapsedTimeMillis() / 1000.0f);
 	d_shader.setUniform3f("eyePosition", d_cam->position());
 	d_shader.setUniform3f("lookAt", d_cam->position() + d_cam->front());
+	d_shader.setUniformMatrix4f("view", d_cam->view());
+
 	d_shader.bindAttribute(ofShader::POSITION_ATTRIBUTE, "in_Position");
 }
 
 void ofApp::updateShader()
 {
+	d_shader.setUniform1f("iTimer", ofGetElapsedTimeMillis() / 1000.0f);
 	d_shader.setUniform3f("eyePosition", d_cam->position());
 	d_shader.setUniform3f("lookAt", d_cam->position() + d_cam->front());
+	d_shader.setUniformMatrix4f("view", d_cam->view());
 	d_shader.setUniform3f("bgColor", d_bgColor.x, d_bgColor.y, d_bgColor.z);
-	//d_shader.setUniform1f("iTime", ofGetElapsedTimeMillis() / 1000.0f);
 }
 
 //--------------------------------------------------------------
