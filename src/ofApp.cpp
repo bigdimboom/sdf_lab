@@ -1,7 +1,10 @@
 #include "ofApp.h"
+#include "preprocess.h"
 
+#define GLSL_VERSION "#version 450\n"
 #define VS "lab1.vert"
 #define FS "lab2.frag"
+#define SDF_HEADER "hg_sdf.glsl"
 
 //--------------------------------------------------------------
 void ofApp::setup()
@@ -22,8 +25,8 @@ void ofApp::setup()
 
 	d_cam = std::make_unique<camera::FreeCamera>(
 		glm::vec3(0.0, 0.0, 5.0),
-		1280, 720,
-		45.0f,
+		WIN_RES_WIDTH, WIN_RES_HEIGHT,
+		CAM_FOV,
 		glm::vec2(0.1, 500.0f)
 		);
 
@@ -34,7 +37,7 @@ void ofApp::setup()
 	d_image.setUseTexture(true);
 	d_image.loadImage("sample.png");
 
-	d_shader.load(VS, FS);
+	loadShader();
 	d_shader.begin();
 	configureShader();
 	d_shader.end();
@@ -63,7 +66,7 @@ void ofApp::draw()
 	ImGui::Text("sec: %f", ofGetElapsedTimeMillis() / 1000.0f);
 	if (ImGui::Button("Reload Shader"))
 	{
-		d_shader.load(VS, FS);
+		loadShader();
 		d_shader.begin();
 		configureShader();
 		d_shader.end();
@@ -104,9 +107,9 @@ void ofApp::mouseMoved(int x, int y)
 }
 
 //--------------------------------------------------------------
-void ofApp::mouseDragged(int x, int y, int button) 
+void ofApp::mouseDragged(int x, int y, int button)
 {
-	if(button == 2) handleMouse((float)x, (float)y);
+	if (button == 2) handleMouse((float)x, (float)y);
 }
 
 //--------------------------------------------------------------
@@ -165,22 +168,44 @@ void ofApp::handleMouse(float xpos, float ypos)
 	}
 }
 
+
+void ofApp::loadShader()
+{
+	auto sdf_lib_source = ofBufferFromFile(SDF_HEADER).getText();
+	auto vs_source = ofBufferFromFile(VS).getText();
+	auto fs_source = ofBufferFromFile(FS).getText();
+
+	std::string directive = "#version";
+	auto size = directive.size() + 4;
+
+	sdf_lib_source.erase(sdf_lib_source.find(directive), size);
+	fs_source.erase(fs_source.find(directive), size);
+	vs_source.erase(vs_source.find(directive), size);
+
+	d_shader.setupShaderFromSource(GL_VERTEX_SHADER, GLSL_VERSION + vs_source);
+	d_shader.setupShaderFromSource(GL_FRAGMENT_SHADER, GLSL_VERSION + sdf_lib_source + fs_source);
+	d_shader.linkProgram();
+}
+
 void ofApp::configureShader()
 {
-	d_shader.setUniform2f("iResolution", glm::vec2(1280, 720));
-	d_shader.setUniform1f("iTimer", ofGetElapsedTimeMillis() / 1000.0f);
-	d_shader.setUniform3f("eyePosition", d_cam->position());
-	d_shader.setUniform3f("lookAt", d_cam->position() + d_cam->front());
-	d_shader.setUniformMatrix4f("view", d_cam->view());
-
 	d_shader.bindAttribute(ofShader::POSITION_ATTRIBUTE, "in_Position");
+
+	d_shader.setUniform2f("iResolution", glm::vec2(WIN_RES_WIDTH, WIN_RES_HEIGHT));
+	d_shader.setUniform1f("iTime", ofGetElapsedTimeMillis() / 1000.0f);
+	d_shader.setUniform1f("camFov", CAM_FOV);
+
+	d_shader.setUniform3f("eyePosition", d_cam->position());
+	d_shader.setUniform3f("lookAtDir", d_cam->front());
+	d_shader.setUniformMatrix4f("view", d_cam->view());
 }
 
 void ofApp::updateShader()
 {
-	d_shader.setUniform1f("iTimer", ofGetElapsedTimeMillis() / 1000.0f);
+	d_shader.setUniform1f("iTime", ofGetElapsedTimeMillis() / 1000.0f);
+
 	d_shader.setUniform3f("eyePosition", d_cam->position());
-	d_shader.setUniform3f("lookAt", d_cam->position() + d_cam->front());
+	d_shader.setUniform3f("lookAtDir", d_cam->front());
 	d_shader.setUniformMatrix4f("view", d_cam->view());
 	d_shader.setUniform3f("bgColor", d_bgColor.x, d_bgColor.y, d_bgColor.z);
 }

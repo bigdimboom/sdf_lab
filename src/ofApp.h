@@ -40,6 +40,7 @@ private:
 	float lastY = 0.0f;
 	void handleMouse(float x, float y);
 
+	void loadShader();
 	void configureShader();
 	void updateShader();
 

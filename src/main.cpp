@@ -1,5 +1,6 @@
 #include "ofMain.h"
 #include "ofApp.h"
+#include "preprocess.h"
 
 //========================================================================
 int main()
@@ -9,7 +10,7 @@ int main()
 	settings.glVersionMajor = 4;
 	settings.glVersionMinor = 5;
 	settings.title = "SDF Lab";
-	settings.setSize(1280, 720);
+	settings.setSize(WIN_RES_WIDTH, WIN_RES_HEIGHT);
 	settings.windowMode = ofWindowMode::OF_WINDOW;
 
 	ofCreateWindow(settings);
