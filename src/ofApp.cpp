@@ -3,7 +3,7 @@
 
 #define GLSL_VERSION "#version 450\n"
 #define VS "lab1.vert"
-#define FS "lab2.frag"
+#define FS "lab4.frag"
 #define SDF_HEADER "hg_sdf.glsl"
 
 //--------------------------------------------------------------

@@ -235,6 +235,12 @@ float fBox(vec3 p, vec3 b) {
 	return length(max(d, vec3(0))) + vmax(min(d, vec3(0)));
 }
 
+// Box: correct distance to corners
+float fRoundBox(vec3 p, vec3 b, float r) {
+	vec3 d = abs(p) - b;
+	return length(max(d, vec3(0))) + vmax(min(d, vec3(0))) - r;
+}
+
 // Same as above, but in two dimensions (an endless box)
 float fBox2Cheap(vec2 p, vec2 b) {
 	return vmax(abs(p)-b);

@@ -96,6 +96,12 @@ float sdf_smin(float a, float b, float k = 32)
     return -log(max(0.0001,res)) / k;
 }
 
+float smin( float a, float b, float k = 0.1)
+{
+    float h = max( k-abs(a-b), 0.0 )/k;
+    return min( a, b ) - h*h*k*(1.0/4.0);
+}
+
 float sdSphere(vec3 pos, float s)
 {
     return length(pos) - s;
@@ -127,19 +133,47 @@ float sdCone(vec3 p, vec2 c )
     return dot(c,vec2(q,p.z));
 }
 
+float sdEllipsoid(vec3 pos, vec3 rad)
+{
+    float k0 = length(pos / rad);
+    float k1 = length(pos/rad/rad);
+    return k0 * (k0 - 1.0) / k1;
+}
+
 float sdBoy(vec3 pos)
 {
-    float t = fract(iTime);
+    float t = 0.5; //fract(iTime);
     float y = 4.0 * t * (1.0 - t);
-    vec3 cen = vec3(0, y, 0.0);
-    // return sdSphere(pos - cen, 0.25);
+    float dy = 4.0 * (1.0 - 2.0 * t);
+    
+    // perpendicular uv
+    vec2 u = normalize(vec2(1.0, -dy));
+    vec2 v = normalize(vec2(dy, 1.0));
 
-    float d1 = sdSphere(pos - cen, 0.35);
-    float d2 = sdSphere(pos - vec3(0, cen.y + 0.5, 0), 0.25);
+    vec3 cen = vec3(0.0, y, 0.0);
 
-    return sdf_smin(d1, d2, 20);
-    return min(d1, d2);
+    float sy = 0.5 + 0.5 * y;
+    float sz = 1.0 / sy;
+    vec3 rad = vec3(0.25, 0.25 * sy, 0.25 * sz);
+    
+    // stretch
+    // body
+    vec3 q = pos - cen;
+    q.yz = vec2(dot(u,q.yz), dot(v,q.yz));
+    float d1 = sdEllipsoid(q, rad);
 
+    // head
+    vec3 h = q;
+    float d2 = sdEllipsoid(h - vec3(0, 0.28, 0), vec3(0.2));
+    float d3 = sdEllipsoid(h - vec3(0, 0.28, 0.1), vec3(0.2));
+
+    // eyes
+    vec3 sh = vec3(abs(h.x), h.yz);
+    float d4 = sdSphere(sh - vec3(0.1, 0.25, 0.28), 0.05);
+
+    d2 = min(d2, d4);
+
+    return smin(d1, smin(d2, d3, 0.03), 0.1);
 }
 
 
@@ -152,13 +186,17 @@ float map(vec3 pos)
     // float d2 = sdSphere(pos - vec3(0,0,0), 0.25);
     // float d = sdf_blend(d1, d2, y);
 
-    //float d = sdBoy(pos);
-    
+    //float d = fCylinder(pos, 0.05, 0.25);
+    float d = sdBoy(pos);
+
     //float d = fBoolOps(pos, 15);
-    float d = fDomainOps(pos, 7);
+    //float d = fDomainOps(pos, 7);
     
     // add floor
     float floor_d = pos.y - (-0.25);
+
+    //float floor_d = fPlane(pos, vec3(0,1,0), 0.25);
+
     return min(d, floor_d);
 }
 
@@ -221,7 +259,7 @@ void main()
         vec3 pos = ro + t*rd;
         vec3 nor = calcNormal(pos);
 
-        vec3 mate = vec3(0.2);
+        vec3 mate = vec3(0.1, 0.1, 0.1);
 
         vec3 sun_dir = normalize(vec3(0.6, 0.9, -0.2));
         float sun_dif = clamp(dot(nor, sun_dir), 0.0, 1.0);
